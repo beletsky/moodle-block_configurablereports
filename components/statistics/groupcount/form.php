@@ -22,33 +22,19 @@
  * @date: 2009
  */
 
-class report_users extends report_base {
+if (!defined('MOODLE_INTERNAL')) {
+    //  It must be included from a Moodle page.
+    die('Direct access to this script is forbidden.');
+}
 
-    public function init() {
-        $this->components = array('columns', 'conditions', 'ordering', 'filters', 'template', 'permissions', 'calcs', 'statistics', 'plot');
+require_once($CFG->libdir.'/formslib.php');
+
+class groupcount_form extends moodleform {
+    public function definition() {
+        global $DB, $USER, $CFG;
+        $mform =& $this->_form;
+        $this->_customdata['compclass']->add_form_elements($mform, $this->_customdata['report']->components);
+        // Buttons.
+        $this->add_action_buttons(true, get_string('add'));
     }
-
-    public function get_all_elements() {
-        global $DB;
-
-        $elements = array();
-        $rs = $DB->get_recordset('user', null, '', 'id');
-        foreach ($rs as $result) {
-            $elements[] = $result->id;
-        }
-        $rs->close();
-        return $elements;
-    }
-
-    public function get_rows($elements, $sqlorder = '') {
-        global $DB, $CFG;
-
-        if (!empty($elements)) {
-            list($usql, $params) = $DB->get_in_or_equal($elements);
-            return $DB->get_records_select('user', "id $usql", $params, $sqlorder);
-        } else {
-            return array();
-        }
-    }
-
 }

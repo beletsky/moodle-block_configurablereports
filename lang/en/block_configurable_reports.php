@@ -17,6 +17,7 @@ $string['plot'] = "Plot - Graphs";
 $string['filters'] = "Filters	";
 $string['calcs'] = "Calculations";
 $string['ordering'] = "Ordering";
+$string['statistics'] = "Statistics";
 $string['customsql'] = "Custom SQL";
 $string['addreport'] = "Add report";
 $string['type'] = "Type of report";
@@ -125,6 +126,9 @@ $string['student'] = 'Student';
 // Calcs
 $string['nocalcsyet'] = "No calculations yet";
 
+// Statistics
+$string['nostatisticsyet'] = "No statistics yet";
+
 // Plot
 $string['noplotyet'] = "No plots yet";
 
@@ -151,6 +155,8 @@ $string['sum'] = "Sum";
 $string['max'] = "Maximum";
 $string['min'] = "Minimum";
 $string['average'] = "Average";
+$string['summary'] = "Summary value";
+$string['groupcount'] = "Group amounts";
 $string['pie'] = "Pie";
 $string['piesummary'] = "A pie graph";
 $string['pieareaname'] = "Name";
@@ -316,6 +322,8 @@ $string['template_marks_help'] = '<p>You can use any of this replacement marks:<
 
 <ul>
 <li>##reportname## - For including the report name</li>
+<li>##nowdate## - For including current date</li>
+<li>##nowtime## - For including current time</li>
 <li>##reportsummary## - For including the reports summary</li>
 <li>##graphs## - For including the graphs</li>
 <li>##exportoptions## - For including the export options</li>
@@ -342,6 +350,11 @@ $string['reporttable_help'] = '<p>This is the width of the table that will displ
 
 $string['comp_calcs'] = 'Calcs';
 $string['comp_calcs_help'] = '<p>Here you can add calculations for columns, i.e: average of number of users enrolled in courses</p>
+
+<p>More help: <a href="http://docs.moodle.org/en/blocks/configurable_reports/" target="_blank">Plugin documentation</a></p>';
+
+$string['comp_statistics'] = 'Statistics';
+$string['comp_statistics_help'] = '<p>Here you can add statistics for columns, i.e: min, max, average of user result, and counts of each result</p>
 
 <p>More help: <a href="http://docs.moodle.org/en/blocks/configurable_reports/" target="_blank">Plugin documentation</a></p>';
 

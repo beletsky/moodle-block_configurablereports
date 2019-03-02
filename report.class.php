@@ -335,6 +335,41 @@ class report_base {
         return $finalcalcs;
     }
 
+    public function get_statistics($finaltable) {
+        global $DB, $CFG;
+
+        $components = cr_unserialize($this->config->components);
+        $statistics = (isset($components['statistics']['elements'])) ? $components['statistics']['elements'] : array();
+
+        // Statistics doesn't work with multi-rows so far.
+        $columnsstatistics = array();
+        $finalstatistics = array();
+        if (!empty($statistics)) {
+            foreach ($statistics as $statistic) {
+                $columnsstatistics[$statistic['formdata']->column] = array();
+            }
+
+            $columnstostore = array_keys($columnsstatistics);
+
+            foreach ($finaltable as $r) {
+                foreach ($columnstostore as $c) {
+                    if (isset($r[$c])) {
+                        $columnsstatistics[$c][] = $r[$c];
+                    }
+                }
+            }
+
+            foreach ($statistics as $statistic) {
+                require_once($CFG->dirroot.'/blocks/configurable_reports/components/statistics/'.$statistic['pluginname'].'/plugin.class.php');
+                $classname = 'plugin_'.$statistic['pluginname'];
+                $class = new $classname($this->config);
+                $result = $class->execute($columnsstatistics[$statistic['formdata']->column]);
+                $finalstatistics[$statistic['formdata']->column] = $result;
+            }
+        }
+        return $finalstatistics;
+    }
+
     public function elements_by_conditions($conditions) {
         global $DB, $CFG;
 
@@ -502,6 +537,8 @@ class report_base {
 
         // CALCS.
         $finalcalcs = $this->get_calcs($finaltable, $tablehead);
+        // STATISTICS.
+        $finalstatistics = $this->get_statistics($finaltable);
 
         // Make the table, head, columns, etc...
 
@@ -533,6 +570,7 @@ class report_base {
         }
         $this->finalreport->table = $table;
         $this->finalreport->calcs = $calcs;
+        $this->finalreport->statistics = $finalstatistics;
 
         return true;
 
@@ -579,6 +617,7 @@ class report_base {
             $calculations = html_writer::table($this->finalreport->calcs);
         }
 
+        $this->totalrecords = count($this->finalreport->table->data);
         $pagination = '';
         if ($this->config->pagination) {
             $page = optional_param('page', 0, PARAM_INT);
@@ -598,7 +637,6 @@ class report_base {
                 }
             }
 
-            $this->totalrecords = count($this->finalreport->table->data);
             $pagingbar = new \paging_bar($this->totalrecords, $page, $this->config->pagination, "viewreport.php?id=".$this->config->id."&courseid=".$this->config->courseid."$postfiltervars&amp;");
             $pagingbar->pagevar = 'page';
             $pagination = $OUTPUT->render($pagingbar);
@@ -606,6 +644,8 @@ class report_base {
 
         $search = [
             '##reportname##',
+            '##nowdate##',
+            '##nowtime##',
             '##reportsummary##',
             '##graphs##',
             '##exportoptions##',
@@ -614,6 +654,8 @@ class report_base {
         ];
         $replace = [
             format_string($this->config->name),
+            strftime('%d.%m.%Y'),
+            userdate(time(),get_string('strftimetime', 'langconfig')),
             format_text($this->config->summary),
             $this->print_graphs(true),
             $this->print_export_options(true),
@@ -621,9 +663,20 @@ class report_base {
             $pagination
         ];
 
+        foreach ($this->finalreport->table->head as $key => $c) {
+            if (!isset($this->finalreport->statistics[$key])) continue;
+
+            $stat_search = array();
+            foreach($this->finalreport->statistics[$key] as $stat_key => $stat_value) {
+                $search[] = '##' . $c . '_' . $stat_key . '##';
+                $replace[] = is_float($stat_value) ? format_float($stat_value) : $stat_value;
+            }
+        }
+
         foreach ($pagecontents as $key => $p) {
             if ($p) {
-                $pagecontents[$key] = str_ireplace($search, $replace, $p);
+                $pagecontents[$key] = str_ireplace($search, $replace, $pagecontents[$key]);
+                $pagecontents[$key] = preg_replace('/##[^#]+_AMOUNT[^#]*##/isU', '0', $pagecontents[$key]);
             }
         }
 
